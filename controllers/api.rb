@@ -20,6 +20,7 @@ end
 
 # create a TGT(Ticket-Granting Ticket)
 # username and password needed
+# One user has one TGT
 post '/api/tickets' do
   halt 460, "err: no valid username"   unless name = params["username"]
   halt 460, "err: no valid password"   unless password = params["password"]
@@ -45,6 +46,7 @@ post '/api/tickets' do
 end
 
 # request an ST
+# One user has several STs of apps from CAS
 post '/api/tickets/:tgt' do |tgt|
   now = Time.now
   halt 460, "err: TGT does not exist"    unless tgt_info = @redis.get(tgt)

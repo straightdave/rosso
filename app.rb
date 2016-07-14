@@ -9,7 +9,6 @@ require_relative 'controllers/_init'
 require_relative 'models/_init'
 
 set :public_folder, File.dirname(__FILE__) + '/public'
-use Rack::Session::Pool, :expire_after => 2592000
 set :port, 8001
 set :bind, '0.0.0.0'
 
@@ -24,7 +23,7 @@ ActiveRecord::Base.default_timezone = :local
 
 before do
   unless @redis = Redis.new(:host => "localhost", :port => 6379, :db => 5)
-    halt 469, "err: redis is not ok"
+    halt 560, "err: redis is not ok"
   end
 end
 

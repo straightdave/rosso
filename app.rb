@@ -11,6 +11,7 @@ require_relative 'models/_init'
 set :public_folder, File.dirname(__FILE__) + '/public'
 set :port, 8001
 set :bind, '0.0.0.0'
+set :tgt_expire, 5 * 60 * 60
 
 ActiveRecord::Base.establish_connection(
   :adapter  => "mysql2",

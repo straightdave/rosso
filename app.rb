@@ -21,7 +21,7 @@ ActiveRecord::Base.establish_connection(
   :host     => "localhost",
   :username => "dave",
   :password => "123123",
-  :database => "russo"
+  :database => "rosso"
 )
 ActiveRecord::Base.default_timezone = :local
 
@@ -36,5 +36,5 @@ after do
 end
 
 get '/' do
-  'ciao russo!'
+  'Ciao Rosso!'
 end

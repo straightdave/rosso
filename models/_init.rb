@@ -1,3 +1,3 @@
 require 'digest'
 require_relative 'user'
-require_relative 'client'
+require_relative 'service'

@@ -7,12 +7,11 @@ require 'securerandom'
 require_relative 'controllers/_init'
 require_relative 'models/_init'
 
-set :public_folder, File.dirname(__FILE__) + '/public'
 set :port, 8001
 set :bind, '0.0.0.0'
-set :tgt_expire, 5 * 60 * 60
+set :key_expire, 1 * 60 * 60
 
-log_file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+log_file = File.new("#{settings.root}/logs/#{settings.environment}.log", 'a+')
 log_file.sync = true
 use Rack::CommonLogger, log_file
 
@@ -37,4 +36,10 @@ end
 
 get '/' do
   'Ciao Rosso!'
+end
+
+# error handler will only work in development env
+# by setting :show_exception to :after_handler
+error do
+  "Unexpected Error: " + env['sinatra.error'].message
 end

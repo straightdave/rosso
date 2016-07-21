@@ -1,11 +1,12 @@
 class User < ActiveRecord::Base
   has_and_belongs_to_many :services
 
-  def self.create_user(name, password, email, phone)
+  def self.create_user(name, password, email = '', phone = '', type = 'custom')
     new_user = User.new
     new_user.name = name
     new_user.salt = Time.now.hash.to_s[-6 .. -1]
     new_user.password = add_salt(password, new_user.salt)
+    new_user.type = type
     new_user.email = email
     new_user.phone = phone
     new_user.save if new_user.valid?
@@ -16,7 +17,13 @@ class User < ActiveRecord::Base
   end
 
   def has_access?(service)
-    self.services.exists?(service.id)
+    if self.services.exists?(service.id)
+      true
+    elsif self.type == 'custom' && service.type == 'custom'
+      true
+    else
+      false
+    end
   end
 
   private

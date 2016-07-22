@@ -6,7 +6,7 @@ class User < ActiveRecord::Base
     new_user.name = name
     new_user.salt = Time.now.hash.to_s[-6 .. -1]
     new_user.password = add_salt(password, new_user.salt)
-    new_user.type = type
+    new_user.utype = type
     new_user.email = email
     new_user.phone = phone
     new_user.save if new_user.valid?
@@ -19,7 +19,7 @@ class User < ActiveRecord::Base
   def has_access?(service)
     if self.services.exists?(service.id)
       true
-    elsif self.type == 'custom' && service.type == 'custom'
+    elsif self.utype == 'custom' && service.stype == 'custom'
       true
     else
       false

@@ -1,2 +1,2 @@
-# don't record *.log files
-.log
+# don't track *.log files
+*.log

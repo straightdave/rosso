@@ -4,29 +4,29 @@ post '/api/service' do
   halt 465, "err: service name duplicated" unless Service.exists?(name: name)
 
   if service = Service.create_service(name, type)
-    ['201', ["SERVICE ID=#{service.id} CREATED"]]
+    [200, ["SERVICE ID=#{service.id} CREATED"]]
   else
-    ['500', ["SERVICE CREATION FAILED"]]
+    [500, ["SERVICE CREATION FAILED"]]
   end
 end
 
 post '/api/service/:name/refreshkey' do |name|
   halt 464, "err: invalid service name" unless service = Service.find_by(name: name)
   if service.refresh_keys!
-    ['201', ['KEYS REFRESHED']]
+    [201, ['KEYS REFRESHED']]
   else
-    ['500', ['KEY REFRESHING FAILED']]
+    [500, ['KEY REFRESHING FAILED']]
   end
 end
 
 get '/api/service/:name' do |name|
   halt 464, "err: invalid service name" unless service = Service.find_by(name: name)
-  json {
+  [200, [{
     "service_id"   => service.id,
     "service_name" => service.name,
     "service_type" => service.type,
     "created_at"   => service.created_at
-  }
+  }.to_json]]
 end
 
 get '/api/services' do

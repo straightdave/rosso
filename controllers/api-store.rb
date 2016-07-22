@@ -12,21 +12,22 @@
 # params:
 # - udid(unique device identity) is required and is provided in header 'x-udid'
 # return:
-# - 200 and the ST which means that user has access to this app now
-# - 403
-#
-# for UDID
-# IOS(>=6): use identifierForVendor (like 599F9C00-92DC-4B5C-9464-7971F01F8370)
-# ANDROID: use pseudo id (snippet: http://stackoverflow.com/questions/2785485/is-there-a-unique-android-device-id), jared's answer
-#          it looks like a hashed IMEI string
+# - 200, the ST for current App; if no ST, it may return the TGT for current user
+# - 403 if no ST or TGT; or other errors
 get '/api/store' do
-  # in TGS, udid is the key, the value is a ST list
-  st_prefix = "ST-#{@svc.id}".freeze
-  if (st_list = @redis.smembers udid) &&
-     (st_list.size > 0) &&
-     (my_st = st_list.find {|st| st.start_with? st_prefix })
-    ['200', [my_st]]
+  halt 403, "Unauthenticated: no UDID key"  unless (ticket_list = @redis.smembers @header_udid)
+  halt 403, "Unauthenticated: no tickets stored" unless ticket_list.size > 0
+
+  tgt_prefix = "TGT".freeze
+  st_prefix  = "ST-#{@svc.id}".freeze
+  my_st = ticket_list.select {|t| (t.start_with? st_prefix) }
+  my_tgt = ticket_list.select {|t| (t.start_with? st_prefix) }
+
+  if my_st.size > 0
+    [200, [my_st.first]]
+  elsif my_tgt.size > 0
+    [200, [my_tgt.first]]
   else
-    halt 403, "Unauthenticated: No ST for this device, user to such app"
+    halt 403, "Unauthenticated: no ST or TGT"
   end
 end

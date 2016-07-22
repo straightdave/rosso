@@ -3,11 +3,12 @@
 # mainly used when registering users
 get '/api/user/:name' do |name|
   halt 404, "err: user not found" unless user = User.find_by(name: name)
-  ['200',
+
+  [200,
     [{
        "user_id"    => user.id,
        "user_name"  => user.name,
-       "user_type"  => user.type,
+       "user_type"  => user.utype,
        "created_at" => user.created_at,
        "access_to_this_app" => user.has_access?(@svc)
     }.to_json]
@@ -20,8 +21,7 @@ end
 # params:
 # - username (distinct)
 # - password
-# - email (distinct)
-# - phone number (distinct)
+# NOTE: for now, just userrname and password, use 'custom' as type
 # return:
 # - new user's id
 # - errors otherwise
@@ -38,9 +38,9 @@ post '/api/user' do
   # halt 406, "err: phone in use"    if User.exists(phone: phone)
 
   if user = User.create_user(name, password)
-    ['201', [user.id]]
+    [201, [user.id]]
   else
-    ['500', ["USER CREATION FAILED"]]
+    [500, ["USER CREATION FAILED"]]
   end
 end
 

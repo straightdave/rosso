@@ -4,7 +4,7 @@ class Service < ActiveRecord::Base
   def self.create_service(name, type)
     new_svc = Service.new
     new_svc.name = name
-    new_svc.type = case type
+    new_svc.stype = case type
     when 'mng'    then 'mng'
     when 'inner'  then 'inner'
     when 'vendor' then 'vendor'

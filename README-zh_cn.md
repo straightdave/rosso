@@ -33,14 +33,14 @@ ST样例```ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81```，`ST-1-`中的1表示�
 
   1. X-APPKEY: App在rosso系统中注册后，系统发放的appkey值
   2. X-MAC: 对请求payload加上securekey进行散列（MD5 hexdigest）后的值；伪代码：
-  ```
-  MD5.hexdigest( "<payload>_<securekey>" )   // 中间用下划线连接
-  // => '05c12a287334386c94131ab8aa00d08a'   // 返回样例
-  ```
+    ```
+    MD5.hexdigest( "<payload>_<securekey>" )   // 中间用下划线连接
+    // => '05c12a287334386c94131ab8aa00d08a'   // 返回样例
+    ```
 
-  其中，payload指的是：
-  - 如果是POST请求，payload是HTTP body，也就是API请求的一些参数字面值
-  - 其它请求，payload是请求的地址（path），如```http://service.host/api/user/john?param1=value1```中的```/api/user/john?param1=value1```部分
+    其中，payload指的是：
+    - 如果是POST请求，payload是HTTP body，也就是API请求的一些参数字面值
+    - 其它请求，payload是请求的地址（path），如```http://service.host/api/user/john?param1=value1```中的```/api/user/john?param1=value1```部分
 
   3. X-UDID: 散列后的UDID，表示设备
 

@@ -79,46 +79,46 @@ Content-Type: application/x-www-form-urlencoded
 ##### 首次打开app1
 1. app1使用UDID向GTS查询票据
 
-```GET /api/store?udid=<udid>```
-成功时返回状态码200，HTTP返回的body是GTS中保存的ticket值：
-如果有ST，则是ST值；若没有ST但是有TGT，则是TGT；
-如果都没有，返回403；
-以及其它一些失败状态码和body数据：
-```
-400 "err: no param UDID"
-... ...等等
-```
+  ```GET /api/store?udid=<udid>```
+  成功时返回状态码200，HTTP返回的body是GTS中保存的ticket值：
+  如果有ST，则是ST值；若没有ST但是有TGT，则是TGT；
+  如果都没有，返回403；
+  以及其它一些失败状态码和body数据：
+  ```
+  400 "err: no param UDID"
+  ... ...等等
+  ```
 
 2. 此时GTS中既没有app1的ST，也没有TGT，因此app1显示登录界面给用户（用户填写登录名、密码）
 3. app1使用用户填写的登录名和密码访问TI，请求TGT：
 
-```
-POST /api/ticket
-Content-Type: application/x-www-form-urlencoded
+  ```
+  POST /api/ticket
+  Content-Type: application/x-www-form-urlencoded
 
-username=johndoe&password=123456
-```
+  username=johndoe&password=123456
+  ```
 
-成功的返回：
-```
-201 CREATED
-Location: /api/ticket/<TGT>
-Content-Type: text/html
+  成功时返回：
+  ```
+  201 CREATED
+  Location: /api/ticket/<TGT>
+  Content-Type: text/html
 
-<TGT>
-```
+  <TGT>
+  ```
 
 4. 如果成功，app1使用TGT向SI请求ST：
-```
-POST /api/ticket/<TGT>
-```
+  ```
+  POST /api/ticket/<TGT>
+  ```
 
-成功返回：
-```
-200 OK
+  成功返回：
+  ```
+  200 OK
 
-<ST>
-```
+  <ST>
+  ```
 
 5. 如果成功，表示用户已在rosso系统登录，可以使用app
 （之后也可加上app1自己内部的用户登录逻辑，从而不必每次都向GTS查询ST来确定用户是否登录）

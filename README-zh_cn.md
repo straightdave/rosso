@@ -64,8 +64,14 @@ GET /api/user/<username>
 
 注册用户：
 POST /api/user
+Content-Type: application/x-www-form-urlencoded
 
 username=newuser&password=123123
+```
+
+>你可以使用自己的方式发送HTTP请求，注意发送带有参数的POST请求时，需要设置Content-Type
+```
+Content-Type: application/x-www-form-urlencoded
 ```
 
 ### 单点登录流程
@@ -88,6 +94,7 @@ username=newuser&password=123123
 
 ```
 POST /api/ticket
+Content-Type: application/x-www-form-urlencoded
 
 username=johndoe&password=123456
 ```

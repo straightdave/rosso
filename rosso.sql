@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `services`;
 CREATE TABLE `services` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
-  `type` varchar(50) NOT NULL,
+  `stype` varchar(50) NOT NULL DEFAULT 'custom',
   `appkey` varchar(50) NOT NULL,
   `skey` varchar(50) NOT NULL,
   `created_at` date DEFAULT NULL,
@@ -34,8 +34,18 @@ CREATE TABLE `services` (
   UNIQUE KEY `name` (`name`),
   KEY `appkey_index` (`appkey`),
   KEY `name_index` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `services`
+--
+
+LOCK TABLES `services` WRITE;
+/*!40000 ALTER TABLE `services` DISABLE KEYS */;
+INSERT INTO `services` VALUES (1,'app1','custom','appkey1','skey1','2016-07-22',NULL),(2,'app2','custom','appkey2','skey2','2016-07-22',NULL);
+/*!40000 ALTER TABLE `services` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `services_users`
@@ -51,6 +61,15 @@ CREATE TABLE `services_users` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `services_users`
+--
+
+LOCK TABLES `services_users` WRITE;
+/*!40000 ALTER TABLE `services_users` DISABLE KEYS */;
+/*!40000 ALTER TABLE `services_users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 
@@ -62,7 +81,7 @@ CREATE TABLE `users` (
   `name` varchar(50) NOT NULL,
   `email` varchar(50) DEFAULT '',
   `phone` varchar(50) DEFAULT '',
-  `type` varchar(50) DEFAULT 'custom',
+  `utype` varchar(50) NOT NULL DEFAULT 'custom',
   `password` varchar(255) NOT NULL,
   `salt` varchar(255) NOT NULL,
   `created_at` date DEFAULT NULL,
@@ -70,8 +89,18 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `index_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'dave','','','custom','b1b5de756adee4a8c266c8077c24db3b','salt','2016-07-22',NULL);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -82,4 +111,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-07-22  3:00:18
+-- Dump completed on 2016-07-22 22:47:41

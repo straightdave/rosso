@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Rosso : ruby version cas sso service">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Rosso</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/straightdave/rosso">View on GitHub</a>
+
+          <h1 id="project_title">Rosso</h1>
+          <h2 id="project_tagline">ruby version cas sso service</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/straightdave/rosso/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/straightdave/rosso/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="rosso" class="anchor" href="#rosso" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>rosso</h1>
+
+<p>一个（实验性质）的移动APP单点登录解决方案，用于企业内部的App之间使用统一用户账户做单点登录。</p>
+
+<h2>
+<a id="rosso中的角色" class="anchor" href="#rosso%E4%B8%AD%E7%9A%84%E8%A7%92%E8%89%B2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>rosso中的角色</h2>
+
+<p>rosso包含三种角色/子服务:</p>
+
+<ol>
+<li>通用票据存储（generic ticket storage，GTS）</li>
+<li>TGT签发者（TGT issuer，TI）</li>
+<li>ST签发者（ST issuer，SI）</li>
+</ol>
+
+<h2>
+<a id="名词解释" class="anchor" href="#%E5%90%8D%E8%AF%8D%E8%A7%A3%E9%87%8A" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>名词解释</h2>
+
+<ul>
+<li>TGT(ticket-granting ticket) 表示一个用户在rosso系统中的登录状态；App在获取TGT之后，可以通过它申请ST；
+TGT样例<code>TGT-612e0548-cc7a-4813-aabc-bd8b410296d4</code>
+</li>
+<li>ST(service ticket) 表示一个用户对某个App的使用权限；
+App从GTS中找到属于它（这台设备上的这个App）的ST，便可允许用户使用程序功能；
+ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</code>中的1表示该app在rosso中注册的id</li>
+<li>UDID(unique device ID) 区分一台移动设备的ID</li>
+</ul>
+
+<h2>
+<a id="rosso使用简介" class="anchor" href="#rosso%E4%BD%BF%E7%94%A8%E7%AE%80%E4%BB%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>rosso使用简介</h2>
+
+<h3>
+<a id="前提条件" class="anchor" href="#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>前提条件</h3>
+
+<ul>
+<li>客户App需要在rosso系统中注册（系统提供appkey和securekey）</li>
+<li>需要确定设备唯一ID(UDID)的计算方法---详见文末说明</li>
+</ul>
+
+<h3>
+<a id="api访问方式" class="anchor" href="#api%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API访问方式</h3>
+
+<ul>
+<li>App们通过HTTP接口访问rosso的服务API</li>
+<li>
+<p>访问API需要附加特殊的HTTP header：</p>
+
+<ol>
+<li>X-APPKEY: App在rosso系统中注册后，系统发放的appkey值</li>
+<li>
+<p>X-MAC: 对请求payload加上securekey进行散列（MD5 hexdigest）后的值；伪代码：</p>
+
+<pre><code>MD5.hexdigest( "&lt;payload&gt;_&lt;securekey&gt;" )   // 中间用下划线连接
+// =&gt; '05c12a287334386c94131ab8aa00d08a'   // 返回样例
+</code></pre>
+
+<p>其中，payload指的是：</p>
+
+<ul>
+<li>如果是POST请求，payload是HTTP body，也就是API请求的一些参数字面值</li>
+<li>其它请求，payload是请求的地址（path），如<code>http://service.host/api/user/john?param1=value1</code>中的<code>/api/user/john?param1=value1</code>部分</li>
+</ul>
+</li>
+<li><p>X-UDID: 散列后的UDID，表示设备</p></li>
+</ol>
+</li>
+</ul>
+
+<h3>
+<a id="注册用户流程" class="anchor" href="#%E6%B3%A8%E5%86%8C%E7%94%A8%E6%88%B7%E6%B5%81%E7%A8%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>注册用户流程</h3>
+
+<p>用户统一管理在rosso系统中，这里适应的场景是，App拥有自己的注册页面，通过调用rosso接口将用户关键数据传回rosso。</p>
+
+<blockquote>
+<p>App可以保留用户的额外信息在它的自己的库中。各个App的后台用户数据以在rosso中记录的登录名为主键。</p>
+</blockquote>
+
+<pre><code>获取用户信息：
+GET /api/user/&lt;username&gt;
+返回json：
+{
+   "user_id"    : &lt;user.id&gt;,
+   "user_name"  : &lt;user.name&gt;,
+   "user_type"  : &lt;user.utype&gt;,
+   "created_at" : &lt;user.created_at&gt;,
+   "access_to_this_app" : &lt;true/false&gt;
+}
+
+注册用户：
+POST /api/user
+Content-Type: application/x-www-form-urlencoded
+
+username=newuser&amp;password=123123
+</code></pre>
+
+<blockquote>
+<p>你可以使用自己的方式发送HTTP请求，注意发送带有参数的POST请求时，需要设置Content-Type</p>
+
+<pre><code>Content-Type: application/x-www-form-urlencoded
+</code></pre>
+</blockquote>
+
+<h3>
+<a id="单点登录流程" class="anchor" href="#%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E6%B5%81%E7%A8%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>单点登录流程</h3>
+
+<h5>
+<a id="首次打开app1" class="anchor" href="#%E9%A6%96%E6%AC%A1%E6%89%93%E5%BC%80app1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>首次打开app1</h5>
+
+<ol>
+<li>app1使用UDID向GTS查询票据</li>
+</ol>
+
+<p><code>GET /api/store?udid=&lt;udid&gt;</code>
+成功时返回状态码200，HTTP返回的body是GTS中保存的ticket值：
+如果有ST，则是ST值；若没有ST但是有TGT，则是TGT；
+如果都没有，返回403；
+以及其它一些失败状态码和body数据：</p>
+
+<pre><code>400 "err: no param UDID"
+... ...等等
+</code></pre>
+
+<ol>
+<li>此时GTS中既没有app1的ST，也没有TGT，因此app1显示登录界面给用户（用户填写登录名、密码）</li>
+<li>app1使用用户填写的登录名和密码访问TI，请求TGT：</li>
+</ol>
+
+<pre><code>POST /api/ticket
+Content-Type: application/x-www-form-urlencoded
+
+username=johndoe&amp;password=123456
+</code></pre>
+
+<p>成功的返回：</p>
+
+<pre><code>201 CREATED
+Location: /api/ticket/&lt;TGT&gt;
+Content-Type: text/html
+
+&lt;TGT&gt;
+</code></pre>
+
+<ol>
+<li>如果成功，app1使用TGT向SI请求ST：</li>
+</ol>
+
+<pre><code>POST /api/ticket/&lt;TGT&gt;
+</code></pre>
+
+<p>成功返回：</p>
+
+<pre><code>200 OK
+
+&lt;ST&gt;
+</code></pre>
+
+<ol>
+<li>如果成功，表示用户已在rosso系统登录，可以使用app
+（之后也可加上app1自己内部的用户登录逻辑，从而不必每次都向GTS查询ST来确定用户是否登录）</li>
+</ol>
+
+<h5>
+<a id="首次打开app2" class="anchor" href="#%E9%A6%96%E6%AC%A1%E6%89%93%E5%BC%80app2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>首次打开app2</h5>
+
+<ol>
+<li>app2使用UDID向GTS查询票据</li>
+<li>虽然没有app2的ST，但是查询到TGT，表示该用户已经在rosso中登录</li>
+<li>app2使用TGT向SI请求ST</li>
+<li>如果成功，表示用户可以访问app2</li>
+</ol>
+
+<h2>
+<a id="udid" class="anchor" href="#udid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UDID</h2>
+
+<p>UDID比较关键，业界也有许多不同的计算方法。每种方法各有千秋，也有不同的可靠性。
+我们这里要求的可靠性较低，不需要该UDID在任何时间、任何情况下永久有效。
+我们需要在可以接受的范围内确保该UDID可以区分设备就可以了。
+因为通过该设备ID作为键存储的信息，最长不超过24小时，默认更短；
+因此在这段时间，假定不发生换SIM卡，系统root、重装之类的变化。</p>
+
+<blockquote>
+<p>注意：
+为不泄露用户隐私，不管UDID如何计算，在发送UDID时均发送其散列后的值。</p>
+</blockquote>
+
+<h3>
+<a id="安卓设备的udid" class="anchor" href="#%E5%AE%89%E5%8D%93%E8%AE%BE%E5%A4%87%E7%9A%84udid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安卓设备的UDID</h3>
+
+<p>推荐使用“伪ID（pseudo id）”的计算方法，它要求低、计算简单、可靠性尚可。请参考
+<a href="http://stackoverflow.com/a/17625641/6348731">jared在StackOverflow上的回答</a></p>
+
+<h3>
+<a id="ios设备的udid" class="anchor" href="#ios%E8%AE%BE%E5%A4%87%E7%9A%84udid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>iOS设备的UDID</h3>
+
+<p>因为iOS6之后，苹果不再允许使用原先的udid获取接口，“identifierForVendor”是目前比较推荐的方法。
+尽管如此，它的局限性还是比较明显：</p>
+
+<ol>
+<li>如果是在App Store中发布的app，它们的vendor信息需要相同，即是同一家厂商发布的app</li>
+<li>
+<em>或者</em>，app尚未发布，处于开发状态，它们的bundle ID需要符合一些条件才可以确保vendor ID相同。
+请参考<a href="https://developer.apple.com/reference/uikit/uidevice/1620059-identifierforvendor">苹果开发者站点</a>
+</li>
+</ol>
+
+<p><a href="http://iosapp.me/blog/2014/03/31/udid/">这个（中文）</a>虽然是网上copy的内容，但是也是比较不伤眼的一篇总结。</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Rosso maintained by <a href="https://github.com/straightdave">straightdave</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

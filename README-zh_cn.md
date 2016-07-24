@@ -9,6 +9,7 @@ rosso包含三种角色/子服务:
 1. 通用票据存储（generic ticket storage，GTS）
 2. TGT签发者（TGT issuer，TI）
 3. ST签发者（ST issuer，SI）
+>ST签发者可以是App本身，也可以是rosso。这里一般用rosso统一管理。
 
 ## 名词解释
 
@@ -16,50 +17,51 @@ rosso包含三种角色/子服务:
 TGT样例```TGT-612e0548-cc7a-4813-aabc-bd8b410296d4```
 - ST(service ticket) 表示一个用户对某个App的使用权限；
 App从GTS中找到属于它（这台设备上的这个App）的ST，便可允许用户使用程序功能；
-ST样例```ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81```，`ST-1-`中的1表示该app在rosso中注册的id
+ST样例```ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81```，`ST-1-`中的1表示该App在rosso中的注册id
 - UDID(unique device ID) 区分一台移动设备的ID
 
 ## rosso使用简介
 
 ### 前提条件
 
-- 客户App需要在rosso系统中注册（系统提供appkey和securekey）
-- 需要确定设备唯一ID(UDID)的计算方法---详见文末说明
+- App需要在rosso系统中注册（线下完成；rosso系统向其提供appkey和securekey）
+- App需要确定设备唯一ID(UDID)的计算方法---详见文末说明
 
 ### API访问方式
 
 - App们通过HTTP接口访问rosso的服务API
 - 访问API需要附加特殊的HTTP header：
 
-  1. X-APPKEY: App在rosso系统中注册后，系统发放的appkey值
-  2. X-MAC: 对请求payload加上securekey进行散列（MD5 hexdigest）后的值；伪代码：
+  1. `X-APPKEY`: App在rosso系统中注册后，系统发放的appkey值
+  2. `X-MAC`: 对请求payload加上securekey进行散列（MD5 hexdigest）后的值；伪代码：
     ```
     MD5.hexdigest( "<payload>_<securekey>" )   // 中间用下划线连接
     // => '05c12a287334386c94131ab8aa00d08a'   // 返回样例
     ```
 
     其中，payload指的是：
-    - 如果是POST请求，payload是HTTP body，也就是API请求的一些参数字面值
+    - 如果是POST请求，payload是HTTP body，也就是API请求的一些参数字符串字面值
     - 其它请求，payload是请求的地址（path），如```http://service.host/api/user/john?param1=value1```中的```/api/user/john?param1=value1```部分
 
-  3. X-UDID: 散列后的UDID，表示设备
+  3. `X-UDID`: 散列后的UDID，表示设备
 
 ### 注册用户流程
 
-用户统一管理在rosso系统中，这里适应的场景是，App拥有自己的注册页面，通过调用rosso接口将用户关键数据传回rosso。
-
->App可以保留用户的额外信息在它的自己的库中。各个App的后台用户数据以在rosso中记录的登录名为主键。
+用户统一管理在rosso系统中。这里适应的场景是，App拥有自己的注册页面，
+注册时通过调用rosso接口将用户关键数据传回rosso。
+>App可以保留用户的额外信息在它的自己的库中。各个App的后台用户数据以登录名为主键（rosso中系统登录名不可重复）。
 
 ```
 获取用户信息：
 GET /api/user/<username>
+
 返回json：
 {
    "user_id"    : <user.id>,
    "user_name"  : <user.name>,
-   "user_type"  : <user.utype>,
-   "created_at" : <user.created_at>,
-   "access_to_this_app" : <true/false>
+   "user_type"  : <user.utype>,          // 该用户类型
+   "created_at" : <user.created_at>,     // 该用户注册时间
+   "access_to_this_app" : <true/false>   // 该用户对调用此API的App是否有访问权限
 }
 
 注册用户：
@@ -69,7 +71,7 @@ Content-Type: application/x-www-form-urlencoded
 username=newuser&password=123123
 ```
 
->你可以使用自己的方式发送HTTP请求，注意发送带有参数的POST请求时，需要设置Content-Type
+>你可以使用自己的方式发送HTTP请求，注意发送带有参数的POST请求时，需要显式设置Content-Type
 ```
 Content-Type: application/x-www-form-urlencoded
 ```
@@ -81,9 +83,9 @@ Content-Type: application/x-www-form-urlencoded
 
   ```GET /api/store?udid=<udid>```
   成功时返回状态码200，HTTP返回的body是GTS中保存的ticket值：
-  如果有ST，则是ST值；若没有ST但是有TGT，则是TGT；
+  如果有ST，则返回ST值；若没有ST但是有TGT，则返回TGT；
   如果都没有，返回403；
-  以及其它一些失败状态码和body数据：
+  调用中还会出现其它一些失败状态码和body数据：
   ```
   400 "err: no param UDID"
   ... ...等等
@@ -120,7 +122,7 @@ Content-Type: application/x-www-form-urlencoded
   <ST>
   ```
 
-5. 如果成功，表示用户已在rosso系统登录，可以使用app
+5. 如果成功，表示用户已在rosso系统登录，且可以使用App
 （之后也可加上app1自己内部的用户登录逻辑，从而不必每次都向GTS查询ST来确定用户是否登录）
 
 ##### 首次打开app2

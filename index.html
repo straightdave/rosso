@@ -44,7 +44,8 @@
 <ol>
 <li>通用票据存储（generic ticket storage，GTS）</li>
 <li>TGT签发者（TGT issuer，TI）</li>
-<li>ST签发者（ST issuer，SI）</li>
+<li>ST签发者（ST issuer，SI）
+&gt;ST签发者可以是App本身，也可以是rosso。这里一般用rosso统一管理。</li>
 </ol>
 
 <h2>
@@ -56,7 +57,7 @@ TGT样例<code>TGT-612e0548-cc7a-4813-aabc-bd8b410296d4</code>
 </li>
 <li>ST(service ticket) 表示一个用户对某个App的使用权限；
 App从GTS中找到属于它（这台设备上的这个App）的ST，便可允许用户使用程序功能；
-ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</code>中的1表示该app在rosso中注册的id</li>
+ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</code>中的1表示该App在rosso中的注册id</li>
 <li>UDID(unique device ID) 区分一台移动设备的ID</li>
 </ul>
 
@@ -67,8 +68,8 @@ ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</co
 <a id="前提条件" class="anchor" href="#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>前提条件</h3>
 
 <ul>
-<li>客户App需要在rosso系统中注册（系统提供appkey和securekey）</li>
-<li>需要确定设备唯一ID(UDID)的计算方法---详见文末说明</li>
+<li>App需要在rosso系统中注册（线下完成；rosso系统向其提供appkey和securekey）</li>
+<li>App需要确定设备唯一ID(UDID)的计算方法---详见文末说明</li>
 </ul>
 
 <h3>
@@ -80,9 +81,10 @@ ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</co
 <p>访问API需要附加特殊的HTTP header：</p>
 
 <ol>
-<li>X-APPKEY: App在rosso系统中注册后，系统发放的appkey值</li>
 <li>
-<p>X-MAC: 对请求payload加上securekey进行散列（MD5 hexdigest）后的值；伪代码：</p>
+<code>X-APPKEY</code>: App在rosso系统中注册后，系统发放的appkey值</li>
+<li>
+<p><code>X-MAC</code>: 对请求payload加上securekey进行散列（MD5 hexdigest）后的值；伪代码：</p>
 
 <pre><code>MD5.hexdigest( "&lt;payload&gt;_&lt;securekey&gt;" )   // 中间用下划线连接
 // =&gt; '05c12a287334386c94131ab8aa00d08a'   // 返回样例
@@ -91,11 +93,11 @@ ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</co
 <p>其中，payload指的是：</p>
 
 <ul>
-<li>如果是POST请求，payload是HTTP body，也就是API请求的一些参数字面值</li>
+<li>如果是POST请求，payload是HTTP body，也就是API请求的一些参数字符串字面值</li>
 <li>其它请求，payload是请求的地址（path），如<code>http://service.host/api/user/john?param1=value1</code>中的<code>/api/user/john?param1=value1</code>部分</li>
 </ul>
 </li>
-<li><p>X-UDID: 散列后的UDID，表示设备</p></li>
+<li><p><code>X-UDID</code>: 散列后的UDID，表示设备</p></li>
 </ol>
 </li>
 </ul>
@@ -103,21 +105,23 @@ ST样例<code>ST-1-64346525-fe41-4908-acf6-6f4b56ac5e81</code>，<code>ST-1-</co
 <h3>
 <a id="注册用户流程" class="anchor" href="#%E6%B3%A8%E5%86%8C%E7%94%A8%E6%88%B7%E6%B5%81%E7%A8%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>注册用户流程</h3>
 
-<p>用户统一管理在rosso系统中，这里适应的场景是，App拥有自己的注册页面，通过调用rosso接口将用户关键数据传回rosso。</p>
+<p>用户统一管理在rosso系统中。这里适应的场景是，App拥有自己的注册页面，
+注册时通过调用rosso接口将用户关键数据传回rosso。</p>
 
 <blockquote>
-<p>App可以保留用户的额外信息在它的自己的库中。各个App的后台用户数据以在rosso中记录的登录名为主键。</p>
+<p>App可以保留用户的额外信息在它的自己的库中。各个App的后台用户数据以登录名为主键（rosso中系统登录名不可重复）。</p>
 </blockquote>
 
 <pre><code>获取用户信息：
 GET /api/user/&lt;username&gt;
+
 返回json：
 {
    "user_id"    : &lt;user.id&gt;,
    "user_name"  : &lt;user.name&gt;,
-   "user_type"  : &lt;user.utype&gt;,
-   "created_at" : &lt;user.created_at&gt;,
-   "access_to_this_app" : &lt;true/false&gt;
+   "user_type"  : &lt;user.utype&gt;,          // 该用户类型
+   "created_at" : &lt;user.created_at&gt;,     // 该用户注册时间
+   "access_to_this_app" : &lt;true/false&gt;   // 该用户对调用此API的App是否有访问权限
 }
 
 注册用户：
@@ -128,7 +132,7 @@ username=newuser&amp;password=123123
 </code></pre>
 
 <blockquote>
-<p>你可以使用自己的方式发送HTTP请求，注意发送带有参数的POST请求时，需要设置Content-Type</p>
+<p>你可以使用自己的方式发送HTTP请求，注意发送带有参数的POST请求时，需要显式设置Content-Type</p>
 
 <pre><code>Content-Type: application/x-www-form-urlencoded
 </code></pre>
@@ -141,23 +145,22 @@ username=newuser&amp;password=123123
 <a id="首次打开app1" class="anchor" href="#%E9%A6%96%E6%AC%A1%E6%89%93%E5%BC%80app1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>首次打开app1</h5>
 
 <ol>
-<li>app1使用UDID向GTS查询票据</li>
-</ol>
+<li>
+<p>app1使用UDID向GTS查询票据</p>
 
 <p><code>GET /api/store?udid=&lt;udid&gt;</code>
 成功时返回状态码200，HTTP返回的body是GTS中保存的ticket值：
-如果有ST，则是ST值；若没有ST但是有TGT，则是TGT；
+如果有ST，则返回ST值；若没有ST但是有TGT，则返回TGT；
 如果都没有，返回403；
-以及其它一些失败状态码和body数据：</p>
+调用中还会出现其它一些失败状态码和body数据：</p>
 
 <pre><code>400 "err: no param UDID"
 ... ...等等
 </code></pre>
-
-<ol>
-<li>此时GTS中既没有app1的ST，也没有TGT，因此app1显示登录界面给用户（用户填写登录名、密码）</li>
-<li>app1使用用户填写的登录名和密码访问TI，请求TGT：</li>
-</ol>
+</li>
+<li><p>此时GTS中既没有app1的ST，也没有TGT，因此app1显示登录界面给用户（用户填写登录名、密码）</p></li>
+<li>
+<p>app1使用用户填写的登录名和密码访问TI，请求TGT：</p>
 
 <pre><code>POST /api/ticket
 Content-Type: application/x-www-form-urlencoded
@@ -165,7 +168,7 @@ Content-Type: application/x-www-form-urlencoded
 username=johndoe&amp;password=123456
 </code></pre>
 
-<p>成功的返回：</p>
+<p>成功时返回：</p>
 
 <pre><code>201 CREATED
 Location: /api/ticket/&lt;TGT&gt;
@@ -173,10 +176,9 @@ Content-Type: text/html
 
 &lt;TGT&gt;
 </code></pre>
-
-<ol>
-<li>如果成功，app1使用TGT向SI请求ST：</li>
-</ol>
+</li>
+<li>
+<p>如果成功，app1使用TGT向SI请求ST：</p>
 
 <pre><code>POST /api/ticket/&lt;TGT&gt;
 </code></pre>
@@ -187,10 +189,9 @@ Content-Type: text/html
 
 &lt;ST&gt;
 </code></pre>
-
-<ol>
-<li>如果成功，表示用户已在rosso系统登录，可以使用app
-（之后也可加上app1自己内部的用户登录逻辑，从而不必每次都向GTS查询ST来确定用户是否登录）</li>
+</li>
+<li><p>如果成功，表示用户已在rosso系统登录，且可以使用App
+（之后也可加上app1自己内部的用户登录逻辑，从而不必每次都向GTS查询ST来确定用户是否登录）</p></li>
 </ol>
 
 <h5>

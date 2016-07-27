@@ -155,5 +155,7 @@ UDID比较关键，业界也有许多不同的计算方法。每种方法各有�
 2. *或者*，app尚未发布，处于开发状态，它们的bundle ID需要符合一些条件才可以确保vendor ID相同。
 请参考[苹果开发者站点](https://developer.apple.com/reference/uikit/uidevice/1620059-identifierforvendor)
 
+如上所述，iOS平台上，可以共享同一UDID的App，必须是一家vendor发布的。这就是目前rosso应用限制在企业内部App的一个原因。
+
 [这个（中文）](http://iosapp.me/blog/2014/03/31/udid/)虽然是网上copy的内容，但是也是比较不伤眼的一篇总结。
 
